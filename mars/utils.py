@@ -1687,6 +1687,68 @@ class Configuration():
         assert response.status_code == 204, 'save as boot default config fail! ' + response.text
 
 
+class SFLOW():
+    def __init__(self, sflow_cfg):
+        self._sflow_cfg = sflow_cfg
+
+    def build(self):
+        #print("debug build _acl_cfg", self._acl_cfg['device-id'])
+        #print("debug", self._acl_cfg['ports'])
+        payload = {}
+        payload.update(self._sflow_cfg['data'])
+        # payload = {
+        #     "devices": self._acl_cfg['device-id'],
+        #     # "ports" : self._acl_cfg['ports']
+        #     "ports": [1],
+        #     "direction": "true",
+        #     "action": "permit",
+        #     "mac": {
+        #         "srcMac": "11:11:11:11:11:11",
+        #         "srcMacMask": "FF:FF:FF:FF:FF:FF"
+        #     }
+        # }
+        #print("debug payload:", payload)
+        response = requests.post(URL+'sflow/v1/{}'.format(self._sflow_cfg['device-id']), json=payload, cookies=COOKIES, headers=POST_HEADER)
+        assert response.status_code == 200, 'Add sflow rule fail! ' + response.text
+        return self
+
+    def buildNotSuccess(self):
+        #print("debug build _acl_cfg", self._acl_cfg['device-id'])
+        #print("debug", self._acl_cfg['ports'])
+        payload = {}
+        payload.update(self._sflow_cfg['data'])
+        response = requests.post(URL+'sflow/v1/{}'.format(self._sflow_cfg['device-id']), json=payload, cookies=COOKIES, headers=POST_HEADER)
+        assert response.status_code != 200, 'Add sflow rule fail! ' + response.text
+        return self
+
+    def delete_deviceByIdNotVerify(self, device_id):
+        response = requests.delete(URL+'sflow/v1/{}'.format(device_id), cookies=COOKIES, headers=DELETE_HEADER)
+        return None
+    
+    def delete_deviceById(self, device_id):
+        response = requests.delete(
+            URL+'sflow/v1/{}'.format(device_id), cookies=COOKIES, headers=DELETE_HEADER)
+        assert response.status_code == 200, 'delete rule of sflow fail! ' + response.text
+        return None
+
+    def get_device(self):
+        response = requests.get(
+            URL+'sflow/v1', cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get all device of sflow status fail! ' + response.text
+        #print("debug get devie response.text:", response.text)
+        #print("debug get devie response.json:", response.json())
+        return response.json()
+
+    def get_deviceById(self, device_id):
+        response = requests.get(
+            URL+'sflow/v1/{}'.format(device_id), cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get device status of sflow fail! ' + response.text
+        #print("Debug {}".format(device_id), response.json())
+        if [] != response.json():
+            return response.json()
+        else:
+            return None
+
 class ACL():
     def __init__(self, acl_cfg):
         self._acl_cfg = acl_cfg
@@ -2152,8 +2214,9 @@ class RebootSwitch():
 
     def reboot(self):
         response = requests.post(
-            URL+'switchmgmt/v1/reboot/{}'.format(self._device_id), headers=POST_HEADER)
-        assert response.status_code == 200, 'Reboot switch fail! ' + response.text
+            URL+'switchmgmt/v1/reboot/{}'.format(self._device_id), cookies=COOKIES, headers=POST_HEADER)
+        assert(response.status_code == 200 or response.status_code == 204), "Acl rule len != 0 fail on device 1"
+        #assert response.status_code == 200, 'Reboot switch fail! ' + response.text
         time.sleep(1)
 
 
