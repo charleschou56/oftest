@@ -1686,6 +1686,83 @@ class Configuration():
             URL+'v1/network/configuration/file-modify/startup_netcfg.cfg', json=json_content, cookies=COOKIES, headers=POST_HEADER)
         assert response.status_code == 204, 'save as boot default config fail! ' + response.text
 
+class PPPoEIA():
+    def __init__(self, pppoeia_cfg):
+        self._pppoeia_cfg = pppoeia_cfg
+
+    def build(self):
+        #print("debug build _pppoeia_cfg", self._pppoeia_cfg['device-id'])
+        #print("debug", self._pppoeia_cfg['ports'])
+        payload = {}
+        payload.update(self._pppoeia_cfg['data'])
+        # payload = {
+        #     "delegateDevices": [
+        #         "rest:192.168.40.166:80/2"
+        #     ]
+        # }
+        #print("debug payload:", payload)
+        response = requests.post(URL+'pppoeia/v1/delegates', json=payload, cookies=COOKIES, headers=POST_HEADER)
+        assert response.status_code == 200, 'Add pppoe ia delegates fail! ' + response.text
+        #print("debug pppoeia json:", response.json())
+        return self
+
+    def put_delegate(self):
+        payload = {}
+        payload.update(self._pppoeia_cfg['data'])
+        response = requests.put(URL+'pppoeia/v1/delegates', json=payload, cookies=COOKIES, headers=POST_HEADER)
+        assert response.status_code == 200, 'Put pppoe ia delegates fail! ' + response.text
+        return self
+
+    def put_pppoeiaById(self, device_id):
+        payload = {}
+        payload.update(self._pppoeia_cfg['data'])
+        response = requests.put(URL+'pppoeia/v1/{}'.format(device_id), json=payload, cookies=COOKIES, headers=POST_HEADER)
+        assert response.status_code == 200, 'Put pppoe ia status fail! ' + response.text
+        return self
+
+    def put_pppoeiaByIdAndPort(self, device_id, device_port):
+        payload = {}
+        payload.update(self._pppoeia_cfg['data'])
+        response = requests.put(URL+'pppoeia/v1/ports/{}/{}'.format(device_id, device_port), json=payload, cookies=COOKIES, headers=POST_HEADER)
+        assert response.status_code == 200, 'Put host port of pppoe ia fail! ' + response.text
+        return self
+
+    def delete_deviceDelegatesById(self, device_id, port_id):
+        response = requests.delete(
+            URL+'pppoeia/v1/delegates/{}%2F{}'.format(device_id, port_id), cookies=COOKIES, headers=DELETE_HEADER)
+        assert response.status_code == 200, 'delete delegates port of pppoe fail! ' + response.text
+        return None
+
+    def get_device(self):
+        response = requests.get(URL+'pppoeia/v1', cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get all device of pppoeia status fail! ' + response.text
+        #print("debug get devie response.text:", response.text)
+        #print("debug get devie response.json:", response.json())
+        return response.json()
+
+    def get_devicePortStatsById(self, device_id):
+        response = requests.get(
+            URL+'pppoeia/v1/portstats/{}'.format(device_id), cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get device port stats of pppoeia fail! ' + response.text
+        if [] != response.json():
+            return response.json()
+        else:
+            return None
+
+    def get_devicePortStats(self):
+        response = requests.get(URL+'pppoeia/v1/portstats', cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get all port status of device of pppoe fail! ' + response.text
+        return response.json()
+
+    def get_devicePortById(self, device_id):
+        response = requests.get(URL+'pppoeia/v1/ports/{}'.format(device_id), cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get all port of device of pppoe fail! ' + response.text
+        return response.json()
+
+    def get_devicePort(self):
+        response = requests.get(URL+'pppoeia/v1/ports', cookies=COOKIES, headers=GET_HEADER)
+        assert response.status_code == 200, 'get all port of device of pppoe fail! ' + response.text
+        return response.json()
 
 class SFLOW():
     def __init__(self, sflow_cfg):
